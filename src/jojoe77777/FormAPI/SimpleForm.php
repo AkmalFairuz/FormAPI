@@ -75,7 +75,7 @@ class SimpleForm extends Form {
     }
 
     public function validate(Player $player, $data): bool{
-        return $data >= 0 && $data < count($this->labelMap);
+        return is_int($data) && $data >= 0 && $data < count($this->labelMap);
     }
 
 }
