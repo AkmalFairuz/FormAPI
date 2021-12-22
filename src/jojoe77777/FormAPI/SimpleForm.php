@@ -4,15 +4,16 @@ declare(strict_types = 1);
 
 namespace jojoe77777\FormAPI;
 
+use pocketmine\player\Player;
+use function is_int;
+
 class SimpleForm extends Form {
 
     const IMAGE_TYPE_PATH = 0;
     const IMAGE_TYPE_URL = 1;
 
-    /** @var string */
-    private $content = "";
-
-    private $labelMap = [];
+    private string $content = "";
+    private array $labelMap = [];
 
     /**
      * @param callable|null $callable
@@ -61,7 +62,7 @@ class SimpleForm extends Form {
      * @param string $text
      * @param int $imageType
      * @param string $imagePath
-     * @param string $label
+     * @param string|null $label
      */
     public function addButton(string $text, int $imageType = -1, string $imagePath = "", ?string $label = null) : void {
         $content = ["text" => $text];
@@ -71,6 +72,10 @@ class SimpleForm extends Form {
         }
         $this->data["buttons"][] = $content;
         $this->labelMap[] = $label ?? count($this->labelMap);
+    }
+
+    public function validate(Player $player, $data): bool{
+        return $data >= 0 && $data < count($this->labelMap);
     }
 
 }

@@ -4,9 +4,18 @@ declare(strict_types = 1);
 
 namespace jojoe77777\FormAPI;
 
+use pocketmine\player\Player;
+use function count;
+use function is_array;
+use function is_bool;
+use function is_float;
+use function is_int;
+
 class CustomForm extends Form {
 
-    private $labelMap = [];
+    private array $labelMap = [];
+    /** @var callable[] */
+    private array $validator = [];
 
     /**
      * @param callable|null $callable
@@ -62,7 +71,9 @@ class CustomForm extends Form {
             $content["default"] = $default;
         }
         $this->addContent($content);
-        $this->labelMap[] = $label ?? count($this->labelMap);
+        $cnt = count($this->labelMap);
+        $this->labelMap[] = $label ?? $cnt;
+        $this->validator[$cnt] = fn($data) => is_bool($data);
     }
 
     /**
@@ -82,7 +93,9 @@ class CustomForm extends Form {
             $content["default"] = $default;
         }
         $this->addContent($content);
-        $this->labelMap[] = $label ?? count($this->labelMap);
+        $cnt = count($this->labelMap);
+        $this->labelMap[] = $label ?? $cnt;
+        $this->validator[$cnt] = fn($data) => (is_int($data) || is_float($data)) && $data >= $min && $data <= $max;
     }
 
     /**
@@ -97,29 +110,35 @@ class CustomForm extends Form {
             $content["default"] = $defaultIndex;
         }
         $this->addContent($content);
-        $this->labelMap[] = $label ?? count($this->labelMap);
+        $cnt = count($this->labelMap);
+        $this->labelMap[] = $label ?? $cnt;
+        $this->validator[$cnt] = fn($data) => is_int($data) && $data >= 0 && $data < count($steps);
     }
 
     /**
      * @param string $text
      * @param array $options
-     * @param int $default
+     * @param int|null $default
      * @param string|null $label
      */
     public function addDropdown(string $text, array $options, int $default = null, ?string $label = null) : void {
         $this->addContent(["type" => "dropdown", "text" => $text, "options" => $options, "default" => $default]);
-        $this->labelMap[] = $label ?? count($this->labelMap);
+        $cnt = count($this->labelMap);
+        $this->labelMap[] = $label ?? $cnt;
+        $this->validator[$cnt] = fn($data) => is_int($data) && $data >= 0 && $data < count($options);
     }
 
     /**
      * @param string $text
      * @param string $placeholder
-     * @param string $default
+     * @param string|null $default
      * @param string|null $label
      */
     public function addInput(string $text, string $placeholder = "", string $default = null, ?string $label = null) : void {
         $this->addContent(["type" => "input", "text" => $text, "placeholder" => $placeholder, "default" => $default]);
+        $cnt = count($this->labelMap);
         $this->labelMap[] = $label ?? count($this->labelMap);
+        $this->validator[$cnt] = fn($data) => is_string($data);
     }
 
     /**
@@ -127,6 +146,22 @@ class CustomForm extends Form {
      */
     private function addContent(array $content) : void {
         $this->data["content"][] = $content;
+    }
+
+    public function validate(Player $player, $data): bool{
+        if(!is_array($data)) {
+            return false;
+        }
+        $cnt = count($data);
+        if($cnt !== count($this->labelMap)) {
+            return false;
+        }
+        foreach($this->validator as $k => $validation) {
+            if(!$validation($data[$k])) {
+                return false;
+            }
+        }
+        return true;
     }
 
 }

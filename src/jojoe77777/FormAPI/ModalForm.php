@@ -4,10 +4,13 @@ declare(strict_types = 1);
 
 namespace jojoe77777\FormAPI;
 
+use pocketmine\player\Player;
+use function is_bool;
+
 class ModalForm extends Form {
 
     /** @var string */
-    private $content = "";
+    private string $content = "";
 
     /**
      * @param callable|null $callable
@@ -75,5 +78,9 @@ class ModalForm extends Form {
      */
     public function getButton2() : string {
         return $this->data["button2"];
+    }
+
+    public function validate(Player $player, $data): bool{
+        return is_bool($data);
     }
 }

@@ -5,12 +5,12 @@ declare(strict_types = 1);
 namespace jojoe77777\FormAPI;
 
 use pocketmine\form\Form as IForm;
-use pocketmine\Player;
+use pocketmine\player\Player;
 
 abstract class Form implements IForm{
 
     /** @var array */
-    protected $data = [];
+    protected array $data = [];
     /** @var callable|null */
     private $callable;
 
@@ -40,6 +40,13 @@ abstract class Form implements IForm{
     }
 
     public function handleResponse(Player $player, $data) : void {
+        try{
+            if($data !== null && !$this->validate($player, $data)){
+                return;
+            }
+        } catch(\Throwable $t) {
+            return;
+        }
         $this->processData($data);
         $callable = $this->getCallable();
         if($callable !== null) {
@@ -52,5 +59,9 @@ abstract class Form implements IForm{
 
     public function jsonSerialize(){
         return $this->data;
+    }
+
+    public function validate(Player $player, $data) : bool{
+        return true;
     }
 }
